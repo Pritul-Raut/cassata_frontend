@@ -16,9 +16,18 @@ export const useGameStore = create((set, get) => ({
 
         // Force lowercase to ensure 'Pritul' and 'pritul' are treated as the same user
         const safeName = playerName.toLowerCase().trim();
-        // const ws = new WebSocket(`ws://localhost:8000/ws/game/${roomId}/${safeName}`);
-        const host = window.location.hostname;
-        const ws = new WebSocket(`ws://${host}:8000/ws/game/${roomId}/${safeName}`);
+        
+        // 1. Grab the Heroku URL from Vercel. Fallback to localhost ONLY for local dev.
+        const rawUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "localhost:8000";
+        
+        // 2. Clean the URL (removes http:// or https:// if you accidentally pasted it in Vercel)
+        const cleanUrl = rawUrl.replace(/^https?:\/\//, '').replace(/^wss?:\/\//, '').replace(/\/$/, '');
+        
+        // 3. FORCE secure WSS if we are on the internet. Use WS only for local testing.
+        const protocol = window.location.hostname === "localhost" ? "ws://" : "wss://";
+        
+        // 4. Connect!
+        const ws = new WebSocket(`${protocol}${cleanUrl}/ws/game/${roomId}/${safeName}`);
 
         ws.onopen = () => {
             set({ socket: ws, isConnected: true, playerName: safeName, roomId, error: null });
@@ -102,6 +111,7 @@ export const useGameStore = create((set, get) => ({
             socket.send(JSON.stringify({ action: "START_GAME" }));
         }
     },
+    
     syncState: () => {
         const { socket } = get();
         if (socket?.readyState === WebSocket.OPEN) {
