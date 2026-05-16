@@ -1,101 +1,95 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useGameStore } from "@/store/gameStore";
+import { motion } from "framer-motion"; // Added for premium desktop entrance
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [name, setName] = useState("");
+  // Generates a random 4-digit PIN on load
+  const [room, setRoom] = useState(() => Math.floor(1000 + Math.random() * 9000).toString());
+  const router = useRouter();
+  
+  const { connect, isConnected, roomId } = useGameStore();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  // Instantly redirect if Ghost Auth remembers the session
+  useEffect(() => {
+    if (isConnected && roomId) {
+      router.push(`/room/${roomId}`);
+    }
+  }, [isConnected, roomId, router]);
+
+  const handleJoin = (e) => {
+    e.preventDefault();
+    if (!name || !room) return;
+    connect(room, name);
+    router.push(`/room/${room}`);
+  };
+
+  return (
+    <main className="min-h-screen bg-[#07090f] flex items-center justify-center p-6 custom-bg-grid">
+      
+      {/* Premium Desktop Animation Wrapper */}
+      <motion.div 
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="max-w-md w-full bg-slate-900/80 backdrop-blur-xl p-10 rounded-[2.5rem] border-2 border-indigo-500/20 shadow-[0_0_50px_rgba(99,102,241,0.1)] relative overflow-hidden"
+      >
+        {/* Subtle top accent line */}
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 to-rose-500"></div>
+
+        <h1 className="text-5xl font-black text-center mb-2 tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-400 italic">
+          CASSATA
+        </h1>
+        <p className="text-slate-500 text-center mb-10 font-bold tracking-widest uppercase text-xs">
+          Authentic Mendhi Coat Multiplayer
+        </p>
+
+        <form onSubmit={handleJoin} className="space-y-6">
+          
+          {/* Player Identity Input */}
+          <div className="space-y-2 group">
+            <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1 group-focus-within:text-indigo-400 transition-colors">
+              Player Identity
+            </label>
+            <input 
+              type="text" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full bg-slate-950/50 border-2 border-slate-800 rounded-2xl px-6 py-4 text-white focus:border-indigo-500 focus:bg-slate-950 outline-none transition-all font-bold placeholder-slate-700"
+              placeholder="e.g. Pritul"
+              required
+              autoComplete="off"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+
+          {/* Room PIN Input */}
+          <div className="space-y-2 group">
+            <label className="text-xs font-black text-slate-500 uppercase tracking-widest ml-1 group-focus-within:text-rose-400 transition-colors">
+              Room Access Code
+            </label>
+            <input 
+              type="number" 
+              value={room}
+              onChange={(e) => setRoom(e.target.value.slice(0, 4))}
+              className="w-full bg-slate-950/50 border-2 border-slate-800 rounded-2xl px-6 py-4 text-white focus:border-rose-500 focus:bg-slate-950 outline-none transition-all font-black text-3xl tracking-[1rem] text-center placeholder-slate-700"
+              placeholder="0000"
+              required
+            />
+          </div>
+
+          {/* Submit Button */}
+          <button 
+            type="submit" 
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-5 rounded-2xl text-xl shadow-[0_10px_20px_rgba(79,70,229,0.3)] transition-all hover:scale-[1.03] active:scale-[0.97] mt-4 tracking-widest"
           >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+            ENTER ARENA
+          </button>
+        </form>
+      </motion.div>
+      
+    </main>
   );
 }
